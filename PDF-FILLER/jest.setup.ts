@@ -1,0 +1,10 @@
+process.env.NODE_ENV = "development";
+process.env.FRONTEND_URL = "http://localhost:5173";
+process.env.GEMINI_API_KEY = "test-gemini-key";
+process.env.DATABASE_URL = "https://example.com/test-database";
+process.env.CLOUDINARY_CLOUD_NAME = "test-cloud";
+process.env.CLOUDINARY_API_KEY = "test-key";
+process.env.CLOUDINARY_API_SECRET = "test-secret";
+process.env.SENDGRID_API_KEY = "test-sendgrid-key";
+process.env.FROM_EMAIL = "test@example.com";
+process.env.EMAIL_ENABLED = "false";

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.example
+*.log
+*.pdf
+public/
+logs/
+tablas/
+demos/
+scripts/

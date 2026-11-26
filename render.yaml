@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: portfolio-backend
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: DEMO_MODE
+        value: "true"
+      - key: FRONTEND_URL
+        value: "https://ritmo-demo.vercel.app"

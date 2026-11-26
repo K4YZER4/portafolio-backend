@@ -1,0 +1,32 @@
+# Control de versiones
+.git
+.gitignore
+.github
+
+# Dependencias (se compilan e instalan dentro del contenedor)
+node_modules
+*/node_modules
+
+# Compilados locales y cachés
+dist
+*/dist
+coverage
+*/coverage
+.nyc_output
+
+# Variables de entorno locales
+.env
+.env.*
+!.env.example
+*.env.local
+
+# IDE y editores
+.idea
+.vscode
+*.swp
+*.swo
+
+# Documentación no esencial en imagen
+docs
+*/docs
+*.md

@@ -1,0 +1,16 @@
+.env
+.env.local
+.env.production
+*.jpeg
+*.log
+node_modules/
+dist/
+demos/
+logs/
+uploads/
+.DS_Store
+Thumbs.db
+/src/generated/prisma
+contrato.pdf
+contrato2.pdf
+

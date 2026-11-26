@@ -1,0 +1,70 @@
+name: Build and Push to GHCR
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    name: Build & Publish Container
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: 1. Descargar código del repositorio
+        uses: actions/checkout@v4
+
+      - name: 2. Configurar Docker Buildx (Acelerador de compilación)
+        uses: docker/setup-buildx-action@v3
+
+      - name: 3. Iniciar sesión en GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 4. Extraer metadatos (Tag latest + Commit SHA)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short,prefix=sha-
+
+      - name: 5. Compilar y subir imagen Docker a GHCR
+        id: docker_build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 6. Mostrar Digest (Hash SHA-256 inmutable generado)
+        run: |
+          echo "===================================================="
+          echo "✅ Imagen subida exitosamente a GHCR"
+          echo "🏷️ Tags: ${{ steps.meta.outputs.tags }}"
+          echo "🔒 SHA256 Digest: ${{ steps.docker_build.outputs.digest }}"
+          echo "===================================================="
+
+      - name: 7. Notificar a Render para auto-despliegue (Opcional con Deploy Hook)
+        if: env.RENDER_DEPLOY_HOOK_URL != ''
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          echo "🚀 Notificando a Render para desplegar la nueva versión..."
+          curl -s -X POST "$RENDER_DEPLOY_HOOK_URL"

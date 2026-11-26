@@ -1,0 +1,39 @@
+# Version control
+.git
+.gitignore
+.github
+
+# Dependencies (reinstalled in container)
+node_modules
+
+
+# Development files
+.env
+.env.local
+.env.*.local
+coverage
+.nyc_output
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# Docker
+Dockerfile
+docker-compose*
+.docker
+.dockerignore
+
+# Documentation
+*.md
+docs
+
+# Tests
+__tests__
+*.test.ts
+*.spec.ts
+jest.config.*

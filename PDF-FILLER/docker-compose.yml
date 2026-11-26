@@ -1,0 +1,51 @@
+services:
+  backend:
+    # Build desde Dockerfile en config/docker/
+    build:
+      context: .
+      dockerfile: config/docker/Dockerfile
+      target: production
+
+    # Nombre del contenedor
+    container_name: rellenador-backend
+
+    # Puertos
+    ports:
+      - "3000:3000"
+
+    # Volúmenes para persistencia
+    volumes:
+      # PDFs generados
+      - ./uploads:/app/uploads:rw
+      # Logs de la aplicación
+      - ./logs:/app/logs:rw
+
+    # Variables de entorno
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - LOG_LEVEL=info
+      - DEMO_MODE=true
+      - DATABASE_URL=postgresql://postgres@127.0.0.1:5432/rellenador?schema=organizacion
+
+    # Cargar .env automáticamente
+    env_file:
+      - .env
+
+    # Reiniciar si falla
+    restart: "no"
+
+    # Logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Network
+    networks:
+      - rellenador-network
+
+networks:
+  rellenador-network:
+    driver: bridge

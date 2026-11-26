@@ -1,0 +1,697 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["organizacion", "cliente", "catalogo", "credito", "documentos"]
+}
+
+// ==========================================
+// ESQUEMA: ORGANIZACION
+// ==========================================
+
+model Rol {
+  id          Int      @id @default(autoincrement())
+  descripcion String   @unique @db.VarChar(50)
+
+  // Relaciones inversas
+  usuarios Usuario[]
+
+  @@map("rol")
+  @@schema("organizacion")
+}
+
+model Empresa {
+  id               Int      @id @default(autoincrement())
+  nombre_comercial String   @db.VarChar(200)
+  razon_social     String   @db.VarChar(100)
+  rfc              String   @unique @db.VarChar(13)
+  registro_reca    String   @unique @db.VarChar(50)
+  domicilio_fiscal String   @db.VarChar(500)
+  pagina_internet  String   @db.VarChar(200)
+  telefono         String   @db.VarChar(15)
+  email            String   @db.VarChar(150)
+  created_at       DateTime @default(now()) @db.Timestamp()
+
+  // Relaciones inversas
+  sucursales Sucursal[]
+
+  @@map("empresa")
+  @@schema("organizacion")
+}
+
+model Sucursal {
+  id         Int    @id @default(autoincrement())
+  id_empresa Int
+  nombre     String @unique @db.VarChar(100)
+
+  // Relaciones
+  empresa Empresa @relation(fields: [id_empresa], references: [id])
+
+  // Relaciones inversas
+  usuarios Usuario[]
+
+  @@map("sucursal")
+  @@schema("organizacion")
+}
+
+model Usuario {
+  id                        Int       @id @default(autoincrement())
+  id_rol                    Int
+  id_sucursal               Int?
+  id_administrador_regional Int?
+  codigo_empleado           String    @unique @db.VarChar(10)
+  nombre                    String    @db.VarChar(100)
+  apellido_paterno          String    @db.VarChar(100)
+  apellido_materno          String    @db.VarChar(100)
+  usuario                   String    @unique @db.VarChar(50)
+  correo                    String    @unique @db.VarChar(150)
+  hash_password             String    @db.Char(60)
+  activo                    Boolean   @default(true)
+  ultimo_acceso             DateTime? @db.Timestamp()
+  created_at                DateTime  @default(now()) @db.Timestamp()
+  updated_at                DateTime  @updatedAt @db.Timestamp()
+
+  // Relaciones
+  rol                    Rol      @relation(fields: [id_rol], references: [id])
+  sucursal               Sucursal? @relation(fields: [id_sucursal], references: [id])
+  administrador_regional Usuario?  @relation("UsuarioAdminRegional", fields: [id_administrador_regional], references: [id])
+
+  // Relaciones inversas
+  asesores          Usuario[]          @relation("UsuarioAdminRegional")
+  contratos         ContratoPrestamo[] @relation("AsesorContrato")
+  historial_credito HistorialCredito[]
+
+  @@map("usuario")
+  @@schema("organizacion")
+}
+
+// ==========================================
+// ESQUEMA: CATALOGO
+// ==========================================
+
+model TipoVivienda {
+  id          Int      @id @default(autoincrement())
+  descripcion String   @unique @db.VarChar(100)
+
+  // Relaciones inversas
+  clientes Cliente[]
+
+  @@map("tipo_vivienda")
+  @@schema("catalogo")
+}
+
+model Pais {
+  id          Int    @id @default(autoincrement())
+  nombre      String @unique @db.VarChar(100)
+  codigo_iso2 String @unique @db.Char(2)
+  codigo_iso3 String @unique @db.Char(3)
+  gentilicio  String @db.VarChar(100)
+
+  // Relaciones inversas
+  clientes Cliente[]
+
+  @@map("pais")
+  @@schema("catalogo")
+}
+
+model EntidadFederativa {
+  id          String @id @db.Char(2)
+  nombre      String @unique @db.VarChar(100)
+  abreviatura String @unique @db.VarChar(3)
+
+  // Relaciones inversas
+  clientes     Cliente[]
+  municipios   Municipio[]
+  dependencias Dependencia[]
+
+  @@map("entidad_federativa")
+  @@schema("catalogo")
+}
+
+model Municipio {
+  id                    Int    @id @default(autoincrement())
+  nombre                String @db.VarChar(100)
+  id_entidad_federativa String @db.Char(2)
+
+  // Relaciones
+  entidad_federativa EntidadFederativa @relation(fields: [id_entidad_federativa], references: [id])
+
+  // Relaciones inversas
+  colonias                       Colonia[]
+  autorizaciones_crediticias     AutorizacionCrediticia[]
+  avisos_privacidad              AvisoPrivacidad[]
+  entrevistas_perfil_politico    EntrevistaPerfilPolitico[]
+  origenes_recursos              OrigenRecursos[]
+  pagares                        Pagare[]
+  domiciliaciones_banco          DomiciliacionBanco[]
+  domiciliaciones                Domiciliacion[]
+  cartas_autorizacion_descuento  CartaAutorizacionDescuento[]
+  consentimientos_descuento      ConsentimientoDescuentoNomina[]
+  contratos_prestamo             ContratoPrestamo[]
+
+  @@unique([nombre, id_entidad_federativa], map: "uq_nombre_entidad")
+  @@map("municipio")
+  @@schema("catalogo")
+}
+
+model Colonia {
+  id            Int    @id @default(autoincrement())
+  nombre        String @db.VarChar(150)
+  codigo_postal String @db.Char(5)
+  id_municipio  Int
+
+  // Relaciones
+  municipio Municipio @relation(fields: [id_municipio], references: [id])
+
+  // Relaciones inversas
+  direcciones DireccionCliente[]
+
+  @@unique([nombre, id_municipio], map: "uq_nombre_municipio")
+  @@map("colonia")
+  @@schema("catalogo")
+}
+
+model EstadoCivil {
+  id          Int    @id @default(autoincrement())
+  descripcion String @unique @db.VarChar(50)
+
+  // Relaciones inversas
+  clientes Cliente[]
+
+  @@map("estado_civil")
+  @@schema("catalogo")
+}
+
+model Genero {
+  id          Int    @id @default(autoincrement())
+  descripcion String @unique @db.VarChar(50)
+
+  // Relaciones inversas
+  clientes Cliente[]
+
+  @@map("genero")
+  @@schema("catalogo")
+}
+
+model Banco {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique @db.VarChar(100)
+
+  // Relaciones inversas
+  informacion_bancaria InformacionBancariaCliente[]
+
+  @@map("banco")
+  @@schema("catalogo")
+}
+
+model Dependencia {
+  id                    Int    @id @default(autoincrement())
+  id_entidad_federativa String @db.Char(2)
+  descripcion           String @unique @db.VarChar(100)
+
+  // Relaciones
+  entidad_federativa EntidadFederativa @relation(fields: [id_entidad_federativa], references: [id])
+
+  // Relaciones inversas
+  empleos_cliente EmpleoCliente[]
+
+  @@map("dependencia")
+  @@schema("catalogo")
+}
+
+model EstadoContrato {
+  id          Int    @id @default(autoincrement())
+  descripcion String @unique @db.VarChar(50)
+
+  // Relaciones inversas
+  contratos              ContratoPrestamo[]
+  historial_como_anterior HistorialCredito[] @relation("EstadoAnterior")
+  historial_como_nuevo    HistorialCredito[] @relation("EstadoNuevo")
+
+  @@map("estado_contrato")
+  @@schema("catalogo")
+}
+
+// ==========================================
+// ESQUEMA: CLIENTE
+// ==========================================
+
+model Cliente {
+  id                      Int       @id @default(autoincrement())
+  nombre                  String    @db.VarChar(100)
+  segundo_nombre          String    @db.VarChar(100)
+  apellido_paterno        String    @db.VarChar(100)
+  apellido_materno        String    @db.VarChar(100)
+  curp                    String    @unique @db.VarChar(18)
+  rfc                     String    @db.VarChar(13)
+  clave_elector           String?   @db.VarChar(18)
+  fecha_nacimiento        DateTime  @db.Date
+  id_genero               Int
+  id_estado_civil         Int
+  id_estado_nacimiento    String    @db.Char(2)
+  id_pais_nacionalidad    Int
+  telefono_fijo           String?   @db.VarChar(15)
+  telefono_celular        String    @db.VarChar(15)
+  telefono_recados        String?   @db.VarChar(15)
+  email_personal          String    @db.VarChar(150)
+  numero_serie_efirma     String?   @unique @db.VarChar(20)
+  efirma_activa           Boolean   @default(false)
+  fecha_vigencia_efirma   DateTime? @db.Date
+  id_tipo_vivienda        Int
+  anios_residencia        Int
+  dependientes_economicos Int       @default(0)
+  url_firma_svg           String?   @db.VarChar(500)
+  created_at              DateTime  @default(now()) @db.Timestamp()
+  updated_at              DateTime  @updatedAt @db.Timestamp()
+
+  // Relaciones
+  genero            Genero            @relation(fields: [id_genero], references: [id])
+  estado_civil      EstadoCivil       @relation(fields: [id_estado_civil], references: [id])
+  estado_nacimiento EntidadFederativa @relation(fields: [id_estado_nacimiento], references: [id])
+  pais_nacionalidad Pais              @relation(fields: [id_pais_nacionalidad], references: [id])
+  tipo_vivienda     TipoVivienda      @relation(fields: [id_tipo_vivienda], references: [id])
+
+  // Relaciones inversas
+  empleos                EmpleoCliente[]
+  direcciones            DireccionCliente[]
+  referencias_personales ReferenciasPersonales[]
+  informacion_bancaria   InformacionBancariaCliente[]
+  contratos              ContratoPrestamo[]
+
+  @@map("cliente")
+  @@schema("cliente")
+}
+
+model EmpleoCliente {
+  id                    Int      @id @default(autoincrement())
+  id_cliente            Int
+  id_dependencia_empleo Int
+  nombre_empresa        String   @db.VarChar(200)
+  numero_empleado       String   @db.VarChar(50)
+  area                  String   @db.VarChar(100)
+  puesto                String   @db.VarChar(100)
+  ingreso_mensual       Decimal  @db.Decimal(10, 2)
+  telefono_empresarial  String   @db.VarChar(15)
+  email_laboral         String   @db.VarChar(150)
+  fecha_inicio          DateTime @db.Date
+  created_at            DateTime @default(now()) @db.Timestamp()
+
+  // Relaciones
+  cliente     Cliente     @relation(fields: [id_cliente], references: [id])
+  dependencia Dependencia @relation(fields: [id_dependencia_empleo], references: [id])
+
+  @@unique([numero_empleado, id_dependencia_empleo])
+  @@map("empleo_cliente")
+  @@schema("cliente")
+}
+
+model DireccionCliente {
+  id              Int      @id @default(autoincrement())
+  id_cliente      Int
+  calle           String   @db.VarChar(200)
+  entre_calles    String   @db.VarChar(200)
+  numero_exterior String   @db.VarChar(10)
+  numero_interior String?  @db.VarChar(10)
+  id_colonia      Int
+  created_at      DateTime @default(now()) @db.Timestamp()
+
+  // Relaciones
+  cliente Cliente @relation(fields: [id_cliente], references: [id])
+  colonia Colonia @relation(fields: [id_colonia], references: [id])
+
+  @@map("direccion_cliente")
+  @@schema("cliente")
+}
+
+model ReferenciasPersonales {
+  id               Int      @id @default(autoincrement())
+  id_cliente       Int
+  nombre           String   @db.VarChar(100)
+  apellido_paterno String   @db.VarChar(100)
+  apellido_materno String   @db.VarChar(100)
+  telefono         String   @db.VarChar(15)
+  created_at       DateTime @default(now()) @db.Timestamp()
+
+  // Relaciones
+  cliente Cliente @relation(fields: [id_cliente], references: [id])
+
+  @@map("referencias_personales")
+  @@schema("cliente")
+}
+
+model InformacionBancariaCliente {
+  id                       Int      @id @default(autoincrement())
+  id_cliente               Int
+  id_banco                 Int
+  numero_cuenta            String   @db.VarChar(20)
+  clabe                    String   @unique @db.Char(18)
+  nombre_titular           String   @db.VarChar(200)
+  orden_de_pago            Boolean  @default(false)
+  cheque                   Boolean  @default(false)
+  transferencia_electronica Boolean  @default(false)
+  created_at               DateTime @default(now()) @db.Timestamp()
+
+  // Relaciones
+  cliente Cliente @relation(fields: [id_cliente], references: [id])
+  banco   Banco   @relation(fields: [id_banco], references: [id])
+
+  @@unique([numero_cuenta, id_banco], map: "uq_numero_cuenta")
+  @@map("informacion_bancaria_cliente")
+  @@schema("cliente")
+}
+
+// ==========================================
+// ESQUEMA: CREDITO
+// ==========================================
+
+model ProductoCredito {
+  id              Int     @id @default(autoincrement())
+  plazo_meses     Int
+  plazo_quincenas Int
+  tasa_mensual    Decimal @db.Decimal(5, 2)
+  tasa_anual      Decimal @db.Decimal(5, 2)
+  cat             Decimal @db.Decimal(5, 2)
+  tipo_saldo      String  @db.VarChar(50)
+  iva_tasa        Decimal @db.Decimal(5, 2)
+  activo          Boolean @default(true)
+
+  // Relaciones inversas
+  tablas_descuento TablaDescuento[]
+  contratos        ContratoPrestamo[]
+
+  @@map("producto_credito")
+  @@schema("credito")
+}
+
+model TablaDescuento {
+  id                  Int     @id @default(autoincrement())
+  id_producto         Int
+  monto_neto_prestar  Decimal @db.Decimal(10, 2)
+  monto_pagare        Decimal @db.Decimal(10, 2)
+  importe_descuento   Decimal @db.Decimal(10, 2)
+  importe_interes     Decimal @db.Decimal(10, 2)
+  importe_iva_interes Decimal @db.Decimal(10, 2)
+
+  // Relaciones
+  producto ProductoCredito @relation(fields: [id_producto], references: [id])
+
+  // Relaciones inversas
+  contratos ContratoPrestamo[]
+
+  @@unique([id_producto, monto_neto_prestar], map: "uq_monto_producto")
+  @@map("tabla_descuento")
+  @@schema("credito")
+}
+
+model ContratoPrestamo {
+  id                      Int      @id @default(autoincrement())
+  folio                   String   @unique @db.VarChar(20)
+  id_cliente              Int
+  id_producto             Int
+  id_estado_contrato      Int
+  id_tabla_descuento      Int
+  id_asesor               Int
+  id_municipio_firma      Int
+  fecha_firma             DateTime? @db.Date
+  perfil_transaccional    String   @db.VarChar(100)
+  importe_credito         Decimal  @db.Decimal(10, 2)
+  importe_total_credito   Decimal  @db.Decimal(10, 2)
+  tasa_mensual            Decimal  @db.Decimal(5, 2)
+  comision_disposicion    Decimal  @db.Decimal(5, 2)
+  importe_pago_quincenal  Decimal  @db.Decimal(10, 2)
+  fecha_limite_pago       String   @db.VarChar(50)
+  fecha_corte             String   @db.VarChar(50)
+  estado_cuenta_domicilio Boolean? @default(false)
+  estado_cuenta_internet  Boolean? @default(false)
+  estado_cuenta_email     Boolean? @default(false)
+  frecuencia_pago         String   @db.VarChar(20)
+  fecha_inicio_pagos      DateTime @db.Date
+  url_pdf_cloud           String?  @db.VarChar(500)
+  url_firma_cloud         String?  @db.VarChar(500)
+  url_pdf_firmado_cloud   String?  @db.VarChar(500)
+  created_at              DateTime @default(now()) @db.Timestamp()
+
+  // Relaciones
+  cliente         Cliente        @relation(fields: [id_cliente], references: [id])
+  producto        ProductoCredito @relation(fields: [id_producto], references: [id])
+  estado_contrato EstadoContrato @relation(fields: [id_estado_contrato], references: [id])
+  tabla_descuento TablaDescuento @relation(fields: [id_tabla_descuento], references: [id])
+  asesor          Usuario        @relation("AsesorContrato", fields: [id_asesor], references: [id])
+  municipio_firma Municipio       @relation(fields: [id_municipio_firma], references: [id])
+
+  // Relaciones inversas
+  historial_credito             HistorialCredito[]
+  autorizacion_crediticia       AutorizacionCrediticia?
+  aviso_privacidad              AvisoPrivacidad?
+  entrevista_perfil_politico    EntrevistaPerfilPolitico?
+  origen_recursos               OrigenRecursos?
+  pagare                        Pagare?
+  domiciliacion_banco           DomiciliacionBanco?
+  domiciliacion                 Domiciliacion?
+  carta_autorizacion_descuento  CartaAutorizacionDescuento?
+  consentimiento_descuento      ConsentimientoDescuentoNomina?
+  token_firma                   TokenFirma[]
+
+  @@map("contrato_prestamo")
+  @@schema("credito")
+}
+
+model HistorialCredito {
+  id                  Int       @id @default(autoincrement())
+  id_contrato         Int
+  id_estado_anterior  Int?
+  id_estado_nuevo     Int
+  id_usuario          Int
+  fecha_inicio        DateTime  @db.Date
+  fecha_fin           DateTime? @db.Date
+  observaciones       String?   @db.Text
+  created_at          DateTime  @default(now()) @db.Timestamp()
+
+  // Relaciones
+  contrato        ContratoPrestamo @relation(fields: [id_contrato], references: [id])
+  estado_anterior EstadoContrato?  @relation("EstadoAnterior", fields: [id_estado_anterior], references: [id])
+  estado_nuevo    EstadoContrato   @relation("EstadoNuevo", fields: [id_estado_nuevo], references: [id])
+  usuario         Usuario          @relation(fields: [id_usuario], references: [id])
+
+  @@map("historial_credito")
+  @@schema("credito")
+}
+
+// ==========================================
+// ESQUEMA: DOCUMENTOS
+// ==========================================
+
+model AutorizacionCrediticia {
+  id                   Int       @id @default(autoincrement())
+  id_contrato          Int       @unique
+  id_municipio_firma   Int
+  fecha_firma          DateTime  @db.Date
+  fecha_consulta_sic_1 DateTime? @db.Date
+  fecha_consulta_sic_2 DateTime? @db.Date
+  fecha_vigencia       DateTime  @db.Date
+  created_at           DateTime  @default(now()) @db.Timestamp()
+
+  // Relaciones
+  contrato        ContratoPrestamo @relation(fields: [id_contrato], references: [id])
+  municipio_firma Municipio        @relation(fields: [id_municipio_firma], references: [id])
+
+  @@map("autorizacion_crediticia")
+  @@schema("documentos")
+}
+
+model AvisoPrivacidad {
+  id                             Int      @id @default(autoincrement())
+  id_contrato                    Int      @unique
+  id_municipio_firma             Int
+  fecha_firma                    DateTime @db.Date
+  acepta_uso_secundario          Boolean
+  acepta_uso_llamadas_bienvenida Boolean
+  acepta_uso_mercadotecnica      Boolean
+  created_at                     DateTime @default(now()) @db.Timestamp()
+
+  // Relaciones
+  contrato        ContratoPrestamo @relation(fields: [id_contrato], references: [id])
+  municipio_firma Municipio        @relation(fields: [id_municipio_firma], references: [id])
+
+  @@map("aviso_privacidad")
+  @@schema("documentos")
+}
+
+model EntrevistaPerfilPolitico {
+  id                        Int      @id @default(autoincrement())
+  id_contrato               Int      @unique
+  id_municipio_firma        Int
+  fecha_firma               DateTime @db.Date
+  datos_completos           Boolean
+  observaciones_faltantes   String?  @db.Text
+  es_pep                    Boolean  @default(false)
+  pep_puesto                String?  @db.VarChar(200)
+  pep_periodo               String?  @db.VarChar(100)
+  familiar_es_pep           Boolean  @default(false)
+  familiar_nombre           String?  @db.VarChar(100)
+  familiar_apellido_paterno String?  @db.VarChar(100)
+  familiar_apellido_materno String?  @db.VarChar(100)
+  familiar_parentesco       String?  @db.VarChar(100)
+  familiar_puesto           String?  @db.VarChar(200)
+  familiar_periodo          String?  @db.VarChar(100)
+  contrataciones_publicas   Boolean  @default(false)
+  asignacion_presupuesto    Boolean  @default(false)
+  control_adquisiciones     Boolean  @default(false)
+  otorgamiento_subsidios    Boolean  @default(false)
+  manejo_info_reservada     Boolean  @default(false)
+  info_reservada_puesto     String?  @db.VarChar(200)
+  info_reservada_periodo    String?  @db.VarChar(100)
+  manejo_finanzas_publicas  Boolean  @default(false)
+  finanzas_puesto           String?  @db.VarChar(200)
+  finanzas_periodo          String?  @db.VarChar(100)
+  manejo_fondos_valores     Boolean  @default(false)
+  fondos_puesto             String?  @db.VarChar(200)
+  fondos_periodo            String?  @db.VarChar(100)
+  otorgamiento_concesiones  Boolean  @default(false)
+  concesiones_puesto        String?  @db.VarChar(200)
+  concesiones_periodo       String?  @db.VarChar(100)
+  auditoria_funciones       Boolean  @default(false)
+  auditoria_puesto          String?  @db.VarChar(200)
+  auditoria_periodo         String?  @db.VarChar(100)
+  poder_decision            Boolean  @default(false)
+  decision_puesto           String?  @db.VarChar(200)
+  decision_periodo          String?  @db.VarChar(100)
+  info_confidencial         Boolean  @default(false)
+  info_confidencial_puesto  String?  @db.VarChar(200)
+  info_confidencial_periodo String?  @db.VarChar(100)
+  created_at                DateTime @default(now()) @db.Timestamp()
+
+  // Relaciones
+  contrato        ContratoPrestamo @relation(fields: [id_contrato], references: [id])
+  municipio_firma Municipio        @relation(fields: [id_municipio_firma], references: [id])
+
+  @@map("entrevista_perfil_politico")
+  @@schema("documentos")
+}
+
+model OrigenRecursos {
+  id                             Int      @id @default(autoincrement())
+  id_contrato                    Int      @unique
+  id_municipio_firma             Int
+  fecha_firma                    DateTime @db.Date
+  proveedor_recursos             String   @db.VarChar(20)
+  propietario_real               String   @db.VarChar(20)
+  ingreso_mensual                Decimal  @db.Decimal(10, 2)
+  origen_recursos                String   @db.VarChar(200)
+  destino_recursos               String   @db.VarChar(200)
+  pretende_prepagos              Boolean  @default(false)
+  numero_prepagos                Int?
+  monto_prepagos                 Decimal? @db.Decimal(10, 2)
+  instrumento_pago_efectivo      Boolean  @default(false)
+  instrumento_pago_cheque        Boolean  @default(false)
+  instrumento_pago_transferencia Boolean  @default(false)
+  instrumento_pago_otro          Boolean  @default(false)
+  origen_recursos_prepagos       String?  @db.VarChar(200)
+  recursos_propios               Boolean  @default(false)
+  recursos_tercero               Boolean  @default(false)
+  created_at                     DateTime @default(now()) @db.Timestamp()
+
+  // Relaciones
+  contrato        ContratoPrestamo @relation(fields: [id_contrato], references: [id])
+  municipio_firma Municipio        @relation(fields: [id_municipio_firma], references: [id])
+
+  @@map("origen_recursos")
+  @@schema("documentos")
+}
+
+model Pagare {
+  id                 Int      @id @default(autoincrement())
+  id_contrato        Int      @unique
+  id_municipio_firma Int
+  fecha_firma        DateTime @db.Date
+  fecha_vencimiento  DateTime @db.Date
+  created_at         DateTime @default(now()) @db.Timestamp()
+
+  // Relaciones
+  contrato        ContratoPrestamo @relation(fields: [id_contrato], references: [id])
+  municipio_firma Municipio        @relation(fields: [id_municipio_firma], references: [id])
+
+  @@map("pagare")
+  @@schema("documentos")
+}
+
+model DomiciliacionBanco {
+  id                 Int      @id @default(autoincrement())
+  id_contrato        Int      @unique
+  id_municipio_firma Int
+  fecha_firma        DateTime @db.Date
+  created_at         DateTime @default(now()) @db.Timestamp()
+
+  // Relaciones
+  contrato        ContratoPrestamo @relation(fields: [id_contrato], references: [id])
+  municipio_firma Municipio        @relation(fields: [id_municipio_firma], references: [id])
+
+  @@map("domiciliacion_banco")
+  @@schema("documentos")
+}
+
+model Domiciliacion {
+  id                  Int       @id @default(autoincrement())
+  id_contrato         Int       @unique
+  id_municipio_firma  Int
+  fecha_firma         DateTime  @db.Date
+  plazo_indeterminado Boolean   @default(true)
+  fecha_vencimiento   DateTime? @db.Date
+  created_at          DateTime  @default(now()) @db.Timestamp()
+
+  // Relaciones
+  contrato        ContratoPrestamo @relation(fields: [id_contrato], references: [id])
+  municipio_firma Municipio        @relation(fields: [id_municipio_firma], references: [id])
+
+  @@map("domiciliacion")
+  @@schema("documentos")
+}
+
+model CartaAutorizacionDescuento {
+  id                 Int      @id @default(autoincrement())
+  id_contrato        Int      @unique
+  id_municipio_firma Int
+  fecha_firma        DateTime @db.Date
+  created_at         DateTime @default(now()) @db.Timestamp()
+
+  // Relaciones
+  contrato        ContratoPrestamo @relation(fields: [id_contrato], references: [id])
+  municipio_firma Municipio        @relation(fields: [id_municipio_firma], references: [id])
+
+  @@map("carta_autorizacion_descuento")
+  @@schema("documentos")
+}
+
+model ConsentimientoDescuentoNomina {
+  id                 Int      @id @default(autoincrement())
+  id_contrato        Int      @unique
+  id_municipio_firma Int
+  fecha_firma        DateTime @db.Date
+  created_at         DateTime @default(now()) @db.Timestamp()
+
+  // Relaciones
+  contrato        ContratoPrestamo @relation(fields: [id_contrato], references: [id])
+  municipio_firma Municipio        @relation(fields: [id_municipio_firma], references: [id])
+
+  @@map("consentimiento_descuento_nomina")
+  @@schema("documentos")
+}
+
+// ==========================================
+// ESQUEMA: CREDITO — Token de Firma
+// ==========================================
+
+model TokenFirma {
+  token       String   @id @db.VarChar(64)
+  id_contrato Int
+  expira      DateTime? @db.Timestamp()
+  usado       Boolean  @default(false)
+  created_at  DateTime @default(now()) @db.Timestamp()
+
+  contrato ContratoPrestamo @relation(fields: [id_contrato], references: [id])
+
+  @@map("token_firma")
+  @@schema("credito")
+}
