@@ -18,7 +18,7 @@ RUN pnpm install --frozen-lockfile
 # Generar cliente de Prisma y compilar backend NestJS
 RUN npx prisma generate
 RUN pnpm run build
-RUN pnpm prune --prod
+RUN pnpm prune --prod --ignore-scripts || true
 
 
 # ========================================================
@@ -36,7 +36,7 @@ RUN npm ci --ignore-scripts
 COPY PDF-FILLER/ .
 RUN npx prisma generate
 RUN npm run build
-RUN npm prune --omit=dev
+RUN npm prune --omit=dev || true
 
 
 # ========================================================
