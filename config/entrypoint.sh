@@ -57,6 +57,7 @@ echo "  ↳ Base de datos 'ritmo' lista."
 echo "--------------------------------------------------------"
 echo "📄 [PDF-FILLER] Ejecutando Prisma Migrate y Seed..."
 export DATABASE_URL="postgresql://postgres@127.0.0.1:5432/rellenador?schema=organizacion"
+echo "DATABASE_URL=\"postgresql://postgres@127.0.0.1:5432/rellenador?schema=organizacion\"" > /app/pdf-filler/.env
 cd /app/pdf-filler
 npx prisma migrate deploy
 echo "🌱 [PDF-FILLER] Sembrando catálogos y empresa demo..."
@@ -67,6 +68,8 @@ echo "--------------------------------------------------------"
 echo "🏋️ [RITMO] Ejecutando Prisma Migrate y Seed..."
 export DATABASE_URL="postgresql://postgres@127.0.0.1:5432/ritmo"
 export DIRECT_URL="postgresql://postgres@127.0.0.1:5432/ritmo"
+echo "DATABASE_URL=\"postgresql://postgres@127.0.0.1:5432/ritmo\"" > /app/ritmo/.env
+echo "DIRECT_URL=\"postgresql://postgres@127.0.0.1:5432/ritmo\"" >> /app/ritmo/.env
 cd /app/ritmo
 npx prisma migrate deploy
 echo "🌱 [RITMO] Sembrando datos de prueba para reclutadores..."

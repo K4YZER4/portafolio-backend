@@ -65,6 +65,7 @@ COPY --from=builder-ritmo /app/ritmo/node_modules /app/ritmo/node_modules
 COPY --from=builder-ritmo /app/ritmo/dist /app/ritmo/dist
 COPY --from=builder-ritmo /app/ritmo/package.json /app/ritmo/package.json
 COPY --from=builder-ritmo /app/ritmo/prisma /app/ritmo/prisma
+COPY --from=builder-ritmo /app/ritmo/prisma.config.ts /app/ritmo/prisma.config.ts
 
 # Copiar artefactos y dependencias de producción de PDF-FILLER
 COPY --from=builder-pdf /app/pdf-filler/node_modules /app/pdf-filler/node_modules
