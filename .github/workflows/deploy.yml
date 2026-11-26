@@ -61,10 +61,21 @@ jobs:
           echo "🔒 SHA256 Digest: ${{ steps.docker_build.outputs.digest }}"
           echo "===================================================="
 
-      - name: 7. Notificar a Render para auto-despliegue (Opcional con Deploy Hook)
-        if: env.RENDER_DEPLOY_HOOK_URL != ''
+      - name: 7. Notificar a Render para auto-despliegue
         env:
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
-          echo "🚀 Notificando a Render para desplegar la nueva versión..."
-          curl -s -X POST "$RENDER_DEPLOY_HOOK_URL"
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "::warning title=Deploy Hook Faltante::⚠️ La variable secreta RENDER_DEPLOY_HOOK_URL no está configurada en los Secrets del repositorio. La imagen se subió a GHCR correctamente, pero Render no fue notificado automáticamente. Configura RENDER_DEPLOY_HOOK_URL en Settings > Secrets para habilitar auto-deploy continuo."
+          else
+            echo "🚀 Notificando a Render para desplegar la nueva versión..."
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$RENDER_DEPLOY_HOOK_URL")
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            BODY=$(echo "$RESPONSE" | sed '$d')
+            echo "Respuesta de Render (HTTP $HTTP_CODE): $BODY"
+            if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+              echo "::error title=Error en Deploy Hook::❌ Falló el webhook de Render con código HTTP $HTTP_CODE: $BODY"
+              exit 1
+            fi
+            echo "✅ Render recibió la notificación y comenzó el despliegue."
+          fi
