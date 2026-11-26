@@ -7,12 +7,15 @@ WORKDIR /app/ritmo
 
 # Dependencias nativas para compilación de módulos C++/TypeScript
 RUN apk add --no-cache openssl python3 make g++
-RUN corepack enable && corepack prepare pnpm@11.5.3 --activate
+RUN npm install -g pnpm@11.5.3
 
-COPY RITMO/package.json RITMO/pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile || pnpm install
-
+# Copiar todo RITMO (necesario porque pnpm-workspace.yaml incluye frontend y pnpm-lock.yaml lo valida)
 COPY RITMO/ .
+
+# Instalar dependencias respetando el workspace
+RUN pnpm install --frozen-lockfile
+
+# Generar cliente de Prisma y compilar backend NestJS
 RUN npx prisma generate
 RUN pnpm run build
 RUN pnpm prune --prod
@@ -53,9 +56,9 @@ RUN addgroup -S nodejs && adduser -S app -G nodejs
 
 WORKDIR /app
 
-# Copiar scripts de configuración y orquestador
+# Copiar scripts de configuración y asegurar finales de línea Unix (LF)
 COPY config/ /app/config/
-RUN chmod +x /app/config/entrypoint.sh
+RUN sed -i 's/\r$//' /app/config/entrypoint.sh /app/config/nginx.conf && chmod +x /app/config/entrypoint.sh
 
 # Copiar artefactos y dependencias de producción de RITMO
 COPY --from=builder-ritmo /app/ritmo/node_modules /app/ritmo/node_modules
