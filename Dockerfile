@@ -65,14 +65,14 @@ COPY --from=builder-ritmo /app/ritmo/node_modules /app/ritmo/node_modules
 COPY --from=builder-ritmo /app/ritmo/dist /app/ritmo/dist
 COPY --from=builder-ritmo /app/ritmo/package.json /app/ritmo/package.json
 COPY --from=builder-ritmo /app/ritmo/prisma /app/ritmo/prisma
-COPY --from=builder-ritmo /app/ritmo/prisma.config.* /app/ritmo/
+COPY --from=builder-ritmo /app/ritmo/prisma.config.cjs /app/ritmo/prisma.config.cjs
 
 # Copiar artefactos y dependencias de producción de PDF-FILLER
 COPY --from=builder-pdf /app/pdf-filler/node_modules /app/pdf-filler/node_modules
 COPY --from=builder-pdf /app/pdf-filler/dist /app/pdf-filler/dist
 COPY --from=builder-pdf /app/pdf-filler/package.json /app/pdf-filler/package.json
 COPY --from=builder-pdf /app/pdf-filler/prisma /app/pdf-filler/prisma
-COPY --from=builder-pdf /app/pdf-filler/prisma.config.* /app/pdf-filler/
+COPY --from=builder-pdf /app/pdf-filler/prisma.config.cjs /app/pdf-filler/prisma.config.cjs
 COPY --from=builder-pdf /app/pdf-filler/contrato_demo.pdf /app/pdf-filler/contrato_demo.pdf
 COPY --from=builder-pdf /app/pdf-filler/tablas /app/pdf-filler/tablas
 COPY --from=builder-pdf /app/pdf-filler/spa.traineddata* /app/pdf-filler/

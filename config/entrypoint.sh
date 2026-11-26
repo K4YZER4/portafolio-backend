@@ -59,7 +59,7 @@ echo "📄 [PDF-FILLER] Ejecutando Prisma Migrate y Seed..."
 export DATABASE_URL="postgresql://postgres@127.0.0.1:5432/rellenador?schema=organizacion"
 echo "DATABASE_URL=\"postgresql://postgres@127.0.0.1:5432/rellenador?schema=organizacion\"" > /app/pdf-filler/.env
 cd /app/pdf-filler
-npx prisma migrate deploy
+./node_modules/.bin/prisma migrate deploy
 echo "🌱 [PDF-FILLER] Sembrando catálogos y empresa demo..."
 node dist/prisma/seed.js || echo "⚠️ Seed de PDF-FILLER finalizado con avisos."
 
@@ -71,7 +71,7 @@ export DIRECT_URL="postgresql://postgres@127.0.0.1:5432/ritmo"
 echo "DATABASE_URL=\"postgresql://postgres@127.0.0.1:5432/ritmo\"" > /app/ritmo/.env
 echo "DIRECT_URL=\"postgresql://postgres@127.0.0.1:5432/ritmo\"" >> /app/ritmo/.env
 cd /app/ritmo
-npx prisma migrate deploy
+./node_modules/.bin/prisma migrate deploy
 echo "🌱 [RITMO] Sembrando datos de prueba para reclutadores..."
 node dist/prisma-seed/seed-demo.js || echo "⚠️ Seed de RITMO finalizado con avisos."
 
